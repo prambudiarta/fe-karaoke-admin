@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import { Item, Category } from 'src/interfaces/basic';
+import { API_BE } from './constanta';
 
 export const useItemStore = defineStore('itemStore', {
   state: () => ({
@@ -11,7 +12,7 @@ export const useItemStore = defineStore('itemStore', {
   actions: {
     async fetchItems() {
       try {
-        const response = await axios.get('/items');
+        const response = await axios.get(`${API_BE}/items`);
         this.items = response.data;
       } catch (error) {
         console.error('Failed to fetch items:', error);
@@ -20,7 +21,7 @@ export const useItemStore = defineStore('itemStore', {
 
     async fetchItemById(itemId: string) {
       try {
-        const response = await axios.get(`/items/${itemId}`);
+        const response = await axios.get(`${API_BE}/items/${itemId}`);
         return response.data;
       } catch (error) {
         console.error('Failed to fetch item:', error);
@@ -36,7 +37,7 @@ export const useItemStore = defineStore('itemStore', {
 
         if (file) formData.append('image', file);
 
-        const response = await axios.post('/items', formData, {
+        const response = await axios.post(`${API_BE}/items`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 
@@ -55,7 +56,7 @@ export const useItemStore = defineStore('itemStore', {
 
         if (file) formData.append('image', file);
 
-        await axios.put(`/items/${item.id}`, formData, {
+        await axios.put(`${API_BE}/items/${item.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 
@@ -68,7 +69,7 @@ export const useItemStore = defineStore('itemStore', {
 
     async deleteItem(itemId: number) {
       try {
-        await axios.delete(`/items/${itemId}`);
+        await axios.delete(`${API_BE}/items/${itemId}`);
         this.items = this.items.filter((item) => item.id !== itemId);
       } catch (error) {
         console.error('Failed to delete item:', error);
@@ -77,40 +78,50 @@ export const useItemStore = defineStore('itemStore', {
 
     async fetchCategories() {
       try {
-        const response = await axios.get('/categories');
+        const response = await axios.get(`${API_BE}/categories`);
         this.categories = response.data;
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       }
     },
 
-    async saveCategory(category: Category) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async saveCategory(formData: any) {
       try {
-        const response = await axios.post('/categories', category);
-        this.categories.push({ ...category, id: response.data.id });
+        const response = await axios.post(`${API_BE}/categories`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        this.categories.push({ ...formData, id: response.data.id });
       } catch (error) {
         console.error('Failed to save category:', error);
       }
     },
 
+    async updateCategory(
+      id: number,
+      formData: any // eslint-disable-line @typescript-eslint/no-explicit-any
+    ) {
+      try {
+        await axios.put(`${API_BE}/categories/${id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        const index = this.categories.findIndex((c) => c.id === id);
+        if (index !== -1) {
+          this.categories[index] = { ...this.categories[index], ...formData };
+        }
+      } catch (error) {
+        console.error('Failed to update category:', error);
+      }
+    },
+
     async deleteCategory(categoryId: number) {
       try {
-        await axios.delete(`/categories/${categoryId}`);
+        await axios.delete(`${API_BE}/categories/${categoryId}`);
         this.categories = this.categories.filter(
           (category) => category.id !== categoryId
         );
       } catch (error) {
         console.error('Failed to delete category:', error);
-      }
-    },
-
-    async updateCategory(category: Category) {
-      try {
-        await axios.put(`/categories/${category.id}`, category);
-        const index = this.categories.findIndex((c) => c.id === category.id);
-        if (index !== -1) this.categories[index] = category;
-      } catch (error) {
-        console.error('Failed to update category:', error);
       }
     },
   },

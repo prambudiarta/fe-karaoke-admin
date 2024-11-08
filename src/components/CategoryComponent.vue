@@ -33,7 +33,7 @@
         <input
           v-else
           type="file"
-          ref="fileInput"
+          :ref="fileInput"
           accept="image/*"
           @change="handleFileChange"
         />
@@ -62,22 +62,18 @@ export default {
     const dialog = ref(isOpen.value);
     const localCategory = ref({ ...props.category });
     const isEditMode = computed(() => props.category && props.category.id);
-    const selectedImage = ref(null);
     const imagePreviewUrl = ref('');
     const fileInput = ref(null);
-    const file = ref(null);
+
     const itemStore = useItemStore();
 
     const triggerFileInput = () => {
       fileInput.value.click();
     };
 
-    const handleFileChange = () => {
-      if (fileInput.value && fileInput.value.files.length > 0) {
-        file.value = fileInput.value.files[0];
-        // Handle the file change logic
-        localCategory.value.imageUrl = URL.createObjectURL(file.value);
-      }
+    const handleFileChange = async (e) => {
+      const file = e.target.files[0];
+      fileInput.value = file;
     };
 
     // Watch for changes in isOpen prop
@@ -105,24 +101,31 @@ export default {
 
     const saveCategory = async () => {
       try {
-        if (isEditMode.value) {
-          // Existing item: update it
-          await itemStore.updateCategory(localCategory.value, file.value);
-        } else {
-          // New item: add it
-          await itemStore.saveCategory(localCategory.value, file.value);
+        const formData = new FormData();
+        formData.append('category', localCategory.value.category);
+
+        // Only append the image if a new file is selected
+        if (fileInput.value && fileInput.value instanceof File) {
+          formData.append('image', fileInput.value);
         }
-        selectedImage.value = null;
+
+        if (isEditMode.value) {
+          await itemStore.updateCategory(localCategory.value.id, formData);
+        } else {
+          await itemStore.saveCategory(formData);
+        }
 
         dialog.value = false;
         emit('save');
+        // window.location.reload();
       } catch (error) {
         console.error('Error saving category:', error);
-        // Handle the error, e.g., show a notification to the user
+        // Optionally, show a notification to the user
       }
     };
 
     return {
+      fileInput,
       dialog,
       localCategory,
       isEditMode,

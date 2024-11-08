@@ -15,6 +15,17 @@
       :columns="columns"
       row-key="id"
     >
+      <!-- Custom slot for the image column -->
+      <template v-slot:body-cell-image="props">
+        <q-td :props="props">
+          <img
+            :src="`${props.row.imageUrl}`"
+            alt="Category Image"
+            style="width: 50px; height: 50px"
+          />
+        </q-td>
+      </template>
+
       <!-- Custom slot for edit button -->
       <template v-slot:body-cell-edit="props">
         <q-td :props="props">
@@ -35,39 +46,33 @@
 </template>
 
 <script lang="ts">
-import { ref, onMounted, Ref, watch, computed } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { QTableColumn } from 'quasar';
 import Swal from 'sweetalert2';
 import CategoryForm from 'src/components/CategoryComponent.vue';
 import { Category } from 'src/interfaces/basic';
 import { useItemStore } from 'src/stores/item-store';
+import { API_ASSETS } from 'src/stores/constanta';
 
 export default {
   components: { CategoryForm },
   setup() {
-    type CategoryFormComponent = {
-      dialog: boolean;
-      openDialog: () => void; // If you have a method to open the dialog
-      // Add other methods or properties you need to access
-    };
     const isDialogOpen = ref(false);
     const itemStore = useItemStore();
     const categories = ref<Category[]>([]);
-    const categoryForm = ref() as Ref<CategoryFormComponent | null>;
+    const categoryForm = ref<InstanceType<typeof CategoryForm> | null>(null);
     const editableCategory = ref({});
     const searchQuery = ref('');
 
     const openNewCategoryForm = () => {
-      editableCategory.value = {}; // Reset or set up a new item structure
+      editableCategory.value = {};
       isDialogOpen.value = true;
     };
 
     const filteredCategory = computed(() => {
-      if (!searchQuery.value) {
-        return categories.value; // Return all items if search query is empty
-      }
-      return categories.value.filter((categories) =>
-        categories.category
+      if (!searchQuery.value) return categories.value;
+      return categories.value.filter((category) =>
+        category.category
           .toLowerCase()
           .includes(searchQuery.value.toLowerCase())
       );
@@ -96,12 +101,14 @@ export default {
         align: 'center',
         sortable: false,
       },
-      // Add more columns as needed
     ];
 
     const fetchCategories = async () => {
       await itemStore.fetchCategories();
       categories.value = itemStore.categories;
+      categories.value.forEach((category) => {
+        category.imageUrl = `${API_ASSETS}${category.imageUrl}`;
+      });
     };
 
     const editCategory = (category: Category) => {
@@ -110,9 +117,8 @@ export default {
     };
 
     const updateCategory = async (category: Category) => {
-      // Call the store method to update the item
-      await itemStore.updateCategory(category);
-      // Refresh items list or handle UI update here
+      //TODO Besok
+      console.log(category);
     };
 
     const deleteCategory = async (category: Category) => {
@@ -131,26 +137,22 @@ export default {
         confirmButtonText: 'Yes, delete it!',
       }).then(async (result) => {
         if (result.isConfirmed) {
-          if (typeof category.id === 'undefined') {
-            Swal.fire('Error', 'Category ID is undefined.', 'error');
-            return;
-          } else {
+          if (category.id !== undefined) {
             await itemStore.deleteCategory(category.id);
-            await itemStore.fetchCategories();
-            categories.value = itemStore.categories;
-            Swal.fire('Deleted!', 'Your item has been deleted.', 'success');
-            // Refresh items list or handle UI update here
+          } else {
+            Swal.fire('Error', 'Category ID is undefined.', 'error');
           }
+          await itemStore.fetchCategories();
+          categories.value = itemStore.categories;
+          Swal.fire('Deleted!', 'Your item has been deleted.', 'success');
         }
       });
     };
 
     watch(
-      () => categoryForm.value?.dialog,
+      () => categoryForm.value?.isOpen,
       (newVal) => {
-        if (newVal === false) {
-          isDialogOpen.value = false;
-        }
+        if (newVal === false) isDialogOpen.value = false;
       }
     );
 
@@ -169,6 +171,7 @@ export default {
       updateCategory,
       deleteCategory,
       fetchCategories,
+      API_ASSETS,
     };
   },
 };

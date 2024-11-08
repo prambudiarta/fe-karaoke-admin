@@ -47,7 +47,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'show', // Removed the leading '/'
         name: 'categoryShow',
-        component: () => import('pages/item/ShowCategories.vue'),
+        component: () => import('pages/item/ShowCategory.vue'),
       },
     ],
   },
