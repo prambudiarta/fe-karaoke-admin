@@ -116,9 +116,8 @@ export default {
       isDialogOpen.value = true;
     };
 
-    const updateCategory = async (category: Category) => {
-      //TODO Besok
-      console.log(category);
+    const updateCategory = async () => {
+      await fetchCategories();
     };
 
     const deleteCategory = async (category: Category) => {

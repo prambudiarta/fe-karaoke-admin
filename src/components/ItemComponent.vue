@@ -81,9 +81,6 @@ export default {
       fileInput.value.click();
     };
 
-    console.log('props item');
-    console.log(props);
-
     const handleFileChange = () => {
       if (fileInput.value && fileInput.value.files.length > 0) {
         file.value = fileInput.value.files[0];
@@ -134,14 +131,22 @@ export default {
     );
 
     const saveItem = async () => {
-      localItem.value.category = localItem.value.category.label;
+      const item = {
+        name: localItem.value.name,
+        price: localItem.value.price,
+        category_id:
+          localItem.value.category.value || localItem.value.category_id,
+        imageUrl: localItem.value.imageUrl,
+      };
+
       try {
         if (isEditMode.value) {
           // Existing item: update it
-          await itemStore.updateItem(localItem.value, file.value);
+          item.id = localItem.value.id;
+          await itemStore.updateItem(item, file.value);
         } else {
           // New item: add it
-          await itemStore.saveItem(localItem.value, file.value);
+          await itemStore.saveItem(item, file.value);
         }
 
         // Clear selected image after saving

@@ -18,7 +18,7 @@
       <!-- Custom slot for image -->
       <template v-slot:body-cell-image="props">
         <q-td :props="props">
-          <img :src="props.row.imageUrl" alt="Item Image" height="50" />
+          <img :src="`${props.row.imageUrl}`" alt="Item Image" height="50" />
         </q-td>
       </template>
 
@@ -49,6 +49,7 @@ import { QTableColumn } from 'quasar';
 import Swal from 'sweetalert2';
 import ItemForm from 'src/components/ItemComponent.vue';
 import { useItemStore } from 'src/stores/item-store';
+import { API_ASSETS } from 'src/stores/constanta';
 
 export default {
   components: { ItemForm },
@@ -118,17 +119,18 @@ export default {
       await itemStore.fetchCategories();
       categories.value = itemStore.categories;
       items.value = itemStore.items;
+      items.value.forEach((item) => {
+        item.imageUrl = `${API_ASSETS}${item.imageUrl}`;
+      });
     };
 
     const editItem = (item: Item) => {
-      editableItem.value = item;
+      editableItem.value = { ...item, category: item.category }; // Ensure category is included
       isDialogOpen.value = true;
     };
 
-    const updateItem = async (item: Item) => {
-      // Call the store method to update the item
-      await itemStore.updateItem(item, null);
-      // Refresh items list or handle UI update here
+    const updateItem = async () => {
+      await fetchItems();
     };
 
     const deleteItem = async (item: Item) => {
@@ -186,6 +188,7 @@ export default {
       updateItem,
       deleteItem,
       fetchItems,
+      API_ASSETS,
     };
   },
 };

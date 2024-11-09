@@ -28,12 +28,15 @@ export const useItemStore = defineStore('itemStore', {
       }
     },
 
-    async saveItem(item: Item, file = null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async saveItem(item: any, file = null) {
       try {
         const formData = new FormData();
+
+        console.log('item', item);
         formData.append('name', item.name);
-        formData.append('price', item.price.toString());
-        formData.append('category', item.category_id.toString());
+        formData.append('price', item.price);
+        formData.append('category_id', item.category_id.toString());
 
         if (file) formData.append('image', file);
 
@@ -47,11 +50,13 @@ export const useItemStore = defineStore('itemStore', {
       }
     },
 
-    async updateItem(item: Item, file = null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async updateItem(item: any, file = null) {
       try {
+        console.log(item);
         const formData = new FormData();
         formData.append('name', item.name);
-        formData.append('price', item.price.toString());
+        formData.append('price', item.price);
         formData.append('category_id', item.category_id.toString());
 
         if (file) formData.append('image', file);
