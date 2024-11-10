@@ -27,7 +27,8 @@ export interface Room {
 }
 
 export interface Order {
-  order_id?: number;
+  id: number;
+  order_id: string;
   room_id: number;
   duration_hours: number;
   start_time: Date;
